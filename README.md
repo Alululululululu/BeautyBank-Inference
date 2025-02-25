@@ -73,7 +73,8 @@ You can download them from Hugging Face:
 
 📂 **[Download from Hugging Face](https://huggingface.co/lulululululululululu/BeautyBank-Model/tree/main)**
 
-### **3. Download Supporting Models
+
+### **3. Download Supporting Models**
 BeautyBank relies on an external Pixel2Style2Pixel (pSp) encoder to embed facial images into the latent space (Z+).
 You must download this model separately from Google Drive:
 
@@ -96,7 +97,7 @@ Ensure that the above files are located in the `checkpoint` directory for the pr
 
 ## Inference
 
-### Makeup Transfer
+### **1. Makeup Transfer**
 
 To run the makeup transfer script, you can use one of the following methods:
 
@@ -136,7 +137,7 @@ python makeup_transfer.py \
 
 This command will apply the makeup transformation based on the provided makeup style, bare-face image, and other parameters and save the result in the specified output directory.
 
-### Facial Images Generation with Makeup Injection
+### **2. Facial Images Generation with Makeup Injection**
 
 We generate facial images with makeup injection by modifying random Gaussian noise to replace the bare-face code. This technique allows for diverse face generation while retaining the specified makeup. 
 
@@ -184,7 +185,7 @@ python generate_face.py \
 - **`--align_face`**: Option to align the face for better consistency in the generated results.
 
 
-### Makeup Interpolation
+### **3. Makeup Interpolation**
 
 Makeup interpolation allows seamless transitions between different makeup styles by interpolating either the bare-face codes or the makeup codes. Since **BeautyBank** includes two style paths, interpolation between different source images and reference makeup styles is achieved by blending these codes, enabling smooth transitions in makeup styles.
 
