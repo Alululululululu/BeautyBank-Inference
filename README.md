@@ -73,15 +73,53 @@ You can download them from Hugging Face:
 
 📂 **[Download from Hugging Face](https://huggingface.co/lulululululululululu/BeautyBank-Model/tree/main)**
 
-### **3. Supporting Models
+### **3. Download Supporting Models
 BeautyBank relies on an external Pixel2Style2Pixel (pSp) encoder to embed facial images into the latent space (Z+).
 You must download this model separately from Google Drive:
 
 📂 **[Download encoder.pt](https://drive.google.com/file/d/1NgI4mPkboYvYw3MWcdUaQhkr0OWgs9ej/view)**
 
+## Inference
 
+### Makeup Transfer
 
+To run the makeup transfer script, you can use one of the following methods:
 
+#### Method 1: Simple Command
+
+```bash
+python run_makeup_transfer.py
+```
+
+This will run the script with default settings.
+
+#### Method 2: Detailed Command with Parameters
+
+If you need more control over the process, you can use the following command to specify additional parameters:
+
+```bash
+python makeup_transfer.py \
+    --style makeup \
+    --name makeup \
+    --style_id 0 \
+    --exstyle_name refined_makeup_code.npy \
+    --content ./data/test/003767.png \
+    --output_path ./output/makeup/ \
+    --weight 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
+    --align_face
+```
+
+#### Arguments:
+- **`--style`**: Type of transformation (e.g., `makeup`).
+- **`--name`**: Name of the transformation (e.g., `makeup`).
+- **`--style_id`**: ID for the makeup style to apply (e.g., `0` for the first style).
+- **`--exstyle_name`**: Path to the refined makeup code file (e.g., `refined_makeup_code.npy`).
+- **`--content`**: Path to the bare-face image (e.g., `./data/test/003767.png`).
+- **`--output_path`**: Directory where the output image will be saved (e.g., `./output/makeup/`).
+- **`--weight`**: Weights for different parts of the transformation (e.g., intensity for makeup features).
+- **`--align_face`**: Flag to indicate whether the face should be aligned for better results.
+
+This command will apply the makeup transformation based on the provided makeup style, bare-face image, and other parameters and save the result in the specified output directory.
 
 
 
