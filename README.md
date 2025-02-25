@@ -242,10 +242,4 @@ If you use this code in your research, please cite our paper:
   year={2024},
   url={https://github.com/Alululululululu/BeautyBank-Inference.git}
 }
-
-
-
-
-
-
-
+```
