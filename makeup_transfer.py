@@ -13,29 +13,29 @@ from model.encoder.psp import pSp
 class TestOptions():
     def __init__(self):
         
-        self.parser = argparse.ArgumentParser(description="Exemplar-Based Style Transfer")
-        self.parser.add_argument("--content", type=str, default='./data/content/000989.jpg', help="path of the content image") #'./data/content_sa/077417.jpg'
-        self.parser.add_argument("--style", type=str, default='makeup3', help="target style type")  ############
-        self.parser.add_argument("--style_id", type=int, default=1, help="the id of the style image") ################53
-        self.parser.add_argument("--truncation", type=float, default=0.75, help="truncation for intrinsic style code (content)")
-        self.parser.add_argument("--weight", type=float, nargs=18, default=[0.75]*7+[1]*11, help="weight of the extrinsic style")
-        self.parser.add_argument("--name", type=str, default='cartoon_transfer', help="filename to save the generated images")
+        self.parser = argparse.ArgumentParser(description="Makeup Style Transfer")
+        self.parser.add_argument("--content", type=str, default='./data/test/000989.jpg', help="path of the bare-face image")
+        self.parser.add_argument("--style", type=str, default='makeup', help="target makeup style type") 
+        self.parser.add_argument("--style_id", type=int, default=0, help="the id of the makeup style image") 
+        self.parser.add_argument("--truncation", type=float, default=0.75, help="truncation for bare-face code (content)")
+        self.parser.add_argument("--weight", type=float, nargs=18, default=[0.75]*7+[1]*11, help="weight of the makeup style")
+        self.parser.add_argument("--name", type=str, default='makeup', help="filename to save the generated images")
         self.parser.add_argument("--preserve_color", action="store_true", help="preserve the color of the content image")
         self.parser.add_argument("--model_path", type=str, default='./checkpoint/', help="path of the saved models")
-        self.parser.add_argument("--model_name", type=str, default='generator.pt', help="name of the saved dualstylegan")
+        self.parser.add_argument("--model_name", type=str, default='generator.pt', help="name of the saved BeautyBank")
         self.parser.add_argument("--output_path", type=str, default='./output/', help="path of the output images")
         self.parser.add_argument("--data_path", type=str, default='./data/', help="path of dataset")
-        self.parser.add_argument("--align_face", action="store_true", help="apply face alignment to the content image")
-        self.parser.add_argument("--exstyle_name", type=str, default=None, help="name of the extrinsic style codes")
-        self.parser.add_argument("--wplus", action="store_true", help="use original pSp encoder to extract the intrinsic style code")
+        self.parser.add_argument("--align_face", action="store_true", help="apply face alignment to the bare-face image")
+        self.parser.add_argument("--makeup_name", type=str, default=None, help="name of the makeup style codes")
+        self.parser.add_argument("--wplus", action="store_true", help="use original pSp encoder to extract the bare-face style code")
 
     def parse(self):
         self.opt = self.parser.parse_args()
-        if self.opt.exstyle_name is None:
-            if os.path.exists(os.path.join(self.opt.model_path, self.opt.style, 'refined_exstyle_code.npy')):
-                self.opt.exstyle_name = 'refined_exstyle_code.npy'
+        if self.opt.makeup_name is None:
+            if os.path.exists(os.path.join(self.opt.model_path, self.opt.style, 'refined_makeup_code.npy')):
+                self.opt.makeup_name = 'refined_makeup_code.npy'
             else:
-                self.opt.exstyle_name = 'exstyle_code.npy'        
+                self.opt.makeup_name = 'makeup_code.npy'        
         args = vars(self.opt)
         print('Load options')
         for name, value in sorted(args.items()):
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     encoder.eval()
     encoder.to(device)
 
-    exstyles = np.load(os.path.join(args.model_path, args.style, args.exstyle_name), allow_pickle='TRUE').item()
+    makeups = np.load(os.path.join(args.model_path, args.style, args.makeup_name), allow_pickle='TRUE').item()
 
     z_plus_latent=not args.wplus
     return_z_plus_latent=not args.wplus
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
     with torch.no_grad():
         viz = []
-        # load content image
+        # load bare-face image
         if args.align_face:
             I = transform(run_alignment(args)).unsqueeze(dim=0).to(device)
             I = F.adaptive_avg_pool2d(I, 1024)
@@ -109,21 +109,21 @@ if __name__ == "__main__":
             I = load_image(args.content).to(device)
         viz += [I]
 
-        # reconstructed content image and its intrinsic style code
+        # reconstructed bare-face image and its bare-face code
         img_rec, instyle = encoder(F.adaptive_avg_pool2d(I, 256), randomize_noise=False, return_latents=True, 
                                    z_plus_latent=z_plus_latent, return_z_plus_latent=return_z_plus_latent, resize=False)  
         img_rec = torch.clamp(img_rec.detach(), -1, 1)
         viz += [img_rec]
 
-        print("number of style you have is : }" + str(len(list(exstyles.keys()))))   ###lulu check
-        stylename = list(exstyles.keys())[args.style_id]
-        latent = torch.tensor(exstyles[stylename]).to(device)
+        print("number of style you have is : }" + str(len(list(makeups.keys()))))   ###lulu check
+        stylename = list(makeups.keys())[args.style_id]
+        latent = torch.tensor(makeups[stylename]).to(device)
         if args.preserve_color and not args.wplus:
             latent[:,7:18] = instyle[:,7:18]
         # extrinsic styte code
-        exstyle = generator.generator.style(latent.reshape(latent.shape[0]*latent.shape[1], latent.shape[2])).reshape(latent.shape)
+        makeup = generator.generator.style(latent.reshape(latent.shape[0]*latent.shape[1], latent.shape[2])).reshape(latent.shape)
         if args.preserve_color and args.wplus:
-            exstyle[:,7:18] = instyle[:,7:18]
+            makeup[:,7:18] = instyle[:,7:18]
             
         # load style image if it exists
         S = None
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         # z_plus_latent: instyle is in Z+ space
         # use_res: use extrinsic style path, or the style is not transferred
         # interp_weights: weight vector for style combination of two paths
-        img_gen, _ = generator([instyle], exstyle, input_is_latent=input_is_latent, z_plus_latent=z_plus_latent,
+        img_gen, _ = generator([instyle], makeup, input_is_latent=input_is_latent, z_plus_latent=z_plus_latent,
                               truncation=args.truncation, truncation_latent=0, use_res=True, interp_weights=args.weight)
         img_gen = torch.clamp(img_gen.detach(), -1, 1)
         viz += [img_gen]

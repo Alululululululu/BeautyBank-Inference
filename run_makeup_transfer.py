@@ -10,7 +10,7 @@ if style_id == 0:
         '--style', style,  
         '--name', 'makeup',  
         '--style_id', str(style_id),
-        '--exstyle_name', 'refined_makeup_code.npy',   
+        '--makeup_name', 'refined_makeup_code.npy',   
         '--content', './data/test/' + img,  
         '--weight', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', 
         '--output_path', './output/makeup/',  

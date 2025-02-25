@@ -102,7 +102,7 @@ python makeup_transfer.py \
     --style makeup \
     --name makeup \
     --style_id 0 \
-    --exstyle_name refined_makeup_code.npy \
+    --makeup_name refined_makeup_code.npy \
     --content ./data/test/003767.png \
     --output_path ./output/makeup/ \
     --weight 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
@@ -113,7 +113,7 @@ python makeup_transfer.py \
 - **`--style`**: Type of transformation (e.g., `makeup`).
 - **`--name`**: Name of the transformation (e.g., `makeup`).
 - **`--style_id`**: ID for the makeup style to apply (e.g., `0` for the first style).
-- **`--exstyle_name`**: Path to the refined makeup code file (e.g., `refined_makeup_code.npy`).
+- **`--makeup_name`**: Path to the refined makeup code file (e.g., `refined_makeup_code.npy`).
 - **`--content`**: Path to the bare-face image (e.g., `./data/test/003767.png`).
 - **`--output_path`**: Directory where the output image will be saved (e.g., `./output/makeup/`).
 - **`--weight`**: Weights for different parts of the transformation (e.g., intensity for makeup features).
