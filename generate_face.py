@@ -13,21 +13,21 @@ from model.encoder.psp import pSp
 class TestOptions():
     def __init__(self):
         
-        self.parser = argparse.ArgumentParser(description="Makeup Style Transfer")
+        self.parser = argparse.ArgumentParser(description="Face Generation")
         self.parser.add_argument("--content", type=str, default='./data/test/003767.png', help="path of the bare-face image")
-        self.parser.add_argument("--style", type=str, default='makeup', help="target makeup style type") 
-        self.parser.add_argument("--style_id", type=int, default=0, help="the id of the makeup style image") 
+        self.parser.add_argument("--style", type=str, default='makeup3', help="target makeup style type")  
+        self.parser.add_argument("--style_id", type=int, default=1, help="the id of the makeup style image") 
         self.parser.add_argument("--truncation", type=float, default=0.75, help="truncation for bare-face code (content)")
         self.parser.add_argument("--weight", type=float, nargs=18, default=[0.75]*7+[1]*11, help="weight of the makeup style")
-        self.parser.add_argument("--name", type=str, default='makeup', help="filename to save the generated images")
+        self.parser.add_argument("--name", type=str, default='cartoon_transfer', help="filename to save the generated images")
         self.parser.add_argument("--preserve_color", action="store_true", help="preserve the color of the content image")
         self.parser.add_argument("--model_path", type=str, default='./checkpoint/', help="path of the saved models")
         self.parser.add_argument("--model_name", type=str, default='generator.pt', help="name of the saved BeautyBank")
         self.parser.add_argument("--output_path", type=str, default='./output/', help="path of the output images")
         self.parser.add_argument("--data_path", type=str, default='./data/', help="path of dataset")
-        self.parser.add_argument("--align_face", action="store_true", help="apply face alignment to the bare-face image")
+        self.parser.add_argument("--align_face", action="store_true", help="apply face alignment to the content image")
         self.parser.add_argument("--makeup_name", type=str, default=None, help="name of the makeup style codes")
-        self.parser.add_argument("--wplus", action="store_true", help="use original pSp encoder to extract the bare-face style code")
+        self.parser.add_argument("--wplus", action="store_true", help="use original pSp encoder to extract the bare-face code")
 
     def parse(self):
         self.opt = self.parser.parse_args()
@@ -99,54 +99,59 @@ if __name__ == "__main__":
     
     print('Load models successfully!')
     
-    with torch.no_grad():
-        viz = []
-        # load bare-face image
-        if args.align_face:
-            I = transform(run_alignment(args)).unsqueeze(dim=0).to(device)
-            I = F.adaptive_avg_pool2d(I, 1024)
-        else:
-            I = load_image(args.content).to(device)
-        viz += [I]
+    num_for_face = 10
+    for num in range(20):
+        with torch.no_grad():
+            viz = []
+            # load content image
+            if args.align_face:
+                I = transform(run_alignment(args)).unsqueeze(dim=0).to(device)
+                I = F.adaptive_avg_pool2d(I, 1024)
+            else:
+                I = load_image(args.content).to(device)
+            viz += [I]
 
-        # reconstructed bare-face image and its bare-face code
-        img_rec, instyle = encoder(F.adaptive_avg_pool2d(I, 256), randomize_noise=False, return_latents=True, 
-                                   z_plus_latent=z_plus_latent, return_z_plus_latent=return_z_plus_latent, resize=False)  
-        img_rec = torch.clamp(img_rec.detach(), -1, 1)
-        viz += [img_rec]
+            # reconstructed content image and its bare-face code
+            img_rec, instyle = encoder(F.adaptive_avg_pool2d(I, 256), randomize_noise=False, return_latents=True, 
+                                    z_plus_latent=z_plus_latent, return_z_plus_latent=return_z_plus_latent, resize=False)  
+            img_rec = torch.clamp(img_rec.detach(), -1, 1)
+            viz += [img_rec]
 
-        print("number of style you have is : }" + str(len(list(makeups.keys()))))   ###lulu check
-        stylename = list(makeups.keys())[args.style_id]
-        latent = torch.tensor(makeups[stylename]).to(device)
-        if args.preserve_color and not args.wplus:
-            latent[:,7:18] = instyle[:,7:18]
-        # extrinsic styte code
-        makeup = generator.generator.style(latent.reshape(latent.shape[0]*latent.shape[1], latent.shape[2])).reshape(latent.shape)
-        if args.preserve_color and args.wplus:
-            makeup[:,7:18] = instyle[:,7:18]
-            
-        # load style image if it exists
-        S = None
-        if os.path.exists(os.path.join(args.data_path, args.style, 'images/train', stylename)):
-            S = load_image(os.path.join(args.data_path, args.style, 'images/train', stylename)).to(device)
-            S = F.interpolate(S, size=(1024, 1024), mode='bilinear', align_corners=False)  ###lulu：确保输入也是1024的
-            viz += [S]
+            # Generate a random noise tensor with the same shape as instyle
+            noise_instyle_origin = torch.randn_like(instyle).to(device)
+            noise_instyle = noise_instyle_origin *0.3 + instyle  #0.1
 
-        # style transfer 
-        img_gen, _ = generator([instyle], makeup, input_is_latent=input_is_latent, z_plus_latent=z_plus_latent,
-                              truncation=args.truncation, truncation_latent=0, use_res=True, interp_weights=args.weight)
-        img_gen = torch.clamp(img_gen.detach(), -1, 1)
-        viz += [img_gen]
+            stylename = list(makeups.keys())[args.style_id]
+            latent = torch.tensor(makeups[stylename]).to(device)
+            if args.preserve_color and not args.wplus:
+                latent[:,7:18] = noise_instyle[:,7:18]  
+            # makeup code
+            makeup = generator.generator.style(latent.reshape(latent.shape[0]*latent.shape[1], latent.shape[2])).reshape(latent.shape)
+            if args.preserve_color and args.wplus:
+                makeup[:,7:18] = noise_instyle[:,7:18] 
+                
+            # load makeup style image if it exists
+            S = None
+            if os.path.exists(os.path.join(args.data_path, args.style, 'images/train', stylename)):
+                S = load_image(os.path.join(args.data_path, args.style, 'images/train', stylename)).to(device)
+                S = F.interpolate(S, size=(1024, 1024), mode='bilinear', align_corners=False) 
+                viz += [S]
 
-    print('Generate images successfully!')
+            # face generation
+            img_gen, _ = generator([noise_instyle], makeup, input_is_latent=input_is_latent, z_plus_latent=z_plus_latent,
+                                truncation=args.truncation, truncation_latent=0, use_res=True, interp_weights=args.weight)
+            img_gen = torch.clamp(img_gen.detach(), -1, 1)
+            viz += [img_gen]
 
-    print()
-    
-    save_name = args.name+'_%d_%s'%(args.style_id, os.path.basename(args.content).split('.')[0])
-    os.makedirs(os.path.join(args.output_path, args.style), exist_ok = True)
-    print(os.path.join(args.output_path, args.style))
-    save_image(torchvision.utils.make_grid(F.adaptive_avg_pool2d(torch.cat(viz, dim=0), 256), 4, 2).cpu(), 
-               os.path.join(args.output_path, args.style, save_name+'_overview.jpg'))
-    save_image(img_gen[0].cpu(), os.path.join(args.output_path, args.style, save_name+'.jpg'))
+        print('Generate images successfully!')
 
-    print('Save images successfully!')
+        print(args.output_path)
+        
+        save_name = args.name+'_%d_%s_%d'%(args.style_id, os.path.basename(args.content).split('.')[0], num)
+        print("save name: " + save_name)
+        os.makedirs(args.output_path, exist_ok = True)
+        save_image(torchvision.utils.make_grid(F.adaptive_avg_pool2d(torch.cat(viz, dim=0), 256), 4, 2).cpu(), 
+                os.path.join(args.output_path, save_name+'_overview.jpg'))
+        save_image(img_gen[0].cpu(), os.path.join(args.output_path, save_name+'.jpg'))
+
+        print('Save images successfully!')
