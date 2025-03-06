@@ -11,7 +11,7 @@ command = [
     '--makeup_name_1', 'refined_makeup_code.npy',
     '--style_id', '0',
     '--makeup_name_2', 'refined_makeup_code.npy',
-    '--style_id2', '0'
+    '--style_id2', '1'
 ]
 
 # Print the command for verification

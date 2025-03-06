@@ -70,6 +70,8 @@ python ./model/stylegan/prepare_data.py --out LMDB_PATH --n_worker N_WORKER --si
 ```
 
 - **LMDB_PATH**: Path where the LMDB dataset will be saved (e.g., `./data/makeup/lmdb/`).
+- **SIZE1,SIZE2,SIZE3,...**: Image sizes to generate (e.g., `512`).
+- **DATASET_PATH**: Path to the dataset (e.g., `./data/makeup/images/`)
 
 ### **2. Download BeautyBank Pre-trained Models**
 We provide two essential models for inference:
@@ -221,7 +223,7 @@ python interpolate_makeup.py \
     --makeup_name_1 refined_makeup_code.npy \
     --style_id 0 \
     --makeup_name_2 refined_makeup_code.npy \    # can be different npy files
-    --style_id2 0
+    --style_id2 1
 ```
 
 #### Arguments:
