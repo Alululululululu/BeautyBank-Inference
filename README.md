@@ -63,6 +63,14 @@ mkdir -p data/makeup/images/train         # Directory for storing PNG image data
 mkdir -p checkpoints/makeup   # Directory for storing refined_makeup_code.npy
 ```
 
+Prepare the dataset located in `./data/makeup/images/train/`. First, create the LMDB datasets by running:
+
+```bash
+python ./model/stylegan/prepare_data.py --out LMDB_PATH --n_worker N_WORKER --size SIZE1,SIZE2,SIZE3,... DATASET_PATH
+```
+
+- **LMDB_PATH**: Path where the LMDB dataset will be saved (e.g., `./data/makeup/lmdb/`).
+
 ### **2. Download BeautyBank Pre-trained Models**
 We provide two essential models for inference:
 
