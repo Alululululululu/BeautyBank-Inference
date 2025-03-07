@@ -254,3 +254,9 @@ If you use this code in your research, please cite our paper:
   url={https://github.com/Alululululululu/BeautyBank-Inference.git}
 }
 ```
+## License
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** License.
+
+[![License: CC BY-NC 4.0](https://licensebuttons.net/l/by-nc/4.0/80x15.png)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+See the [LICENSE](LICENSE) file for more details.
